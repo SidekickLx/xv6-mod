@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->syscall_counter = 0;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -199,6 +199,7 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+  np->syscall_counter = 0;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -530,5 +531,43 @@ procdump(void)
         cprintf(" %p", pc[i]);
     }
     cprintf("\n");
+  }
+}
+
+//proc info
+//takes one integer parameter with value 1, 2 or 3. Depending on the value, it returns:
+//  (1) A count of the processes in the system;
+//  (2) A count of the total number of system calls that a process has done so far; 
+//  (3) The number of memory pages the current process is using.
+int
+info(int para)
+{
+  struct proc *p;
+  int proc_num = 0;
+  int syscall_num = 0;
+  int pgt_num = 0;
+  switch(para){
+    case 1:
+    //A count of the processes in the system;
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state == UNUSED)
+        proc_num ++ ; // if there is a blank slot counter+1
+      }
+      proc_num = NPROC - proc_num; // get the number of slots that have been occupied
+      return proc_num;
+    case 2:
+    //A count of the total number of system calls that a process has done so far;
+    //The pdf has some issue here, because there is no input for pid so it shoud return the number of syscalls of current process.
+      p = myproc(); //get current process
+      
+      return p->syscall_counter;
+    case 3:
+    //The number of memory pages the current process is using.m
+      p = myproc(); //get current process
+      pgt_num = (p->sz - 1) / PGSIZE + 1; //pgt number = process' memory size / page size
+      return pgt_num;
+    default:
+    //wrong inputs.
+      return -1;
   }
 }
