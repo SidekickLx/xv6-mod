@@ -89,6 +89,8 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->syscall_counter = 0;
+  p->tickets = 5;  //initial value of tickets
+  p->stride = 10000/5;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -138,6 +140,8 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+  //p->tickets = 10000;
+  //p->stride = 1.0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -199,7 +203,7 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
-  np->syscall_counter = 0;
+  //np->syscall_counter = 0;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -320,6 +324,7 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+/*
 void
 scheduler(void)
 {
@@ -352,9 +357,134 @@ scheduler(void)
       c->proc = 0;
     }
     release(&ptable.lock);
-
   }
 }
+*/
+// this is the function of lottery scheduler
+
+void
+scheduler(void)
+{
+  struct proc *p;
+  struct cpu *c = mycpu();
+  struct proc* pgamer[NPROC];
+  int gamer_idx = 0;
+  int ticket_sum = 0;
+  int winner_ticket = 0;
+  int ticket_mark[NPROC];
+  c->proc = 0;
+  
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    // Loop over process table looking for process to run.
+    gamer_idx = 0;
+    ticket_sum = 0;
+    winner_ticket = 0;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+      pgamer[gamer_idx] = p;
+      ticket_sum += p->tickets;
+      ticket_mark[gamer_idx] = ticket_sum;
+      gamer_idx++;
+    }
+    //Start running lottery
+    if(gamer_idx == 0){
+      release(&ptable.lock);
+      continue;
+    }
+    srandom(sys_uptime());
+    winner_ticket = random(ticket_sum);
+    //Find out which one win this game
+    //cprintf("winner_ticket = %d\n", winner_ticket);
+    int i = 0;
+    for(i=0; i < gamer_idx; i++){
+      if(ticket_mark[i] >= winner_ticket){
+        p = pgamer[i];
+        break;
+      }
+    }  
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    release(&ptable.lock);
+  }
+}
+
+
+/*
+//stride schduler
+void 
+scheduler(void)
+{
+  struct proc *p;
+  struct proc *next_p;
+  struct cpu *c = mycpu();
+  int runnable_process = 0;
+  float min_stride = 10000;
+  c->proc = 0;
+  
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    // Loop over process table looking for process to run.
+    
+    min_stride = 10000;
+    runnable_process = 0;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+      runnable_process++;
+      if(p->stride <= min_stride){
+        next_p = p;
+        min_stride = p->stride;
+      } 
+    }
+    if(runnable_process == 0){
+      release(&ptable.lock);
+      continue;
+    }
+      
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    
+    c->proc = next_p;
+    switchuvm(next_p);
+    next_p->state = RUNNING;
+    next_p->stride = next_p->stride + (10000/next_p->tickets);
+
+    swtch(&(c->scheduler), next_p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    release(&ptable.lock);
+  }
+
+}
+
+*/
+
+
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
@@ -544,7 +674,7 @@ info(int para)
 {
   struct proc *p;
   int proc_num = 0;
-  int syscall_num = 0;
+  //int syscall_num = 0;
   int pgt_num = 0;
   switch(para){
     case 1:
@@ -559,10 +689,9 @@ info(int para)
     //A count of the total number of system calls that a process has done so far;
     //The pdf has some issue here, because there is no input for pid so it shoud return the number of syscalls of current process.
       p = myproc(); //get current process
-      
       return p->syscall_counter;
     case 3:
-    //The number of memory pages the current process is using.m
+    //The number of memorypages the current process is using.
       p = myproc(); //get current process
       pgt_num = (p->sz - 1) / PGSIZE + 1; //pgt number = process' memory size / page size
       return pgt_num;
@@ -570,4 +699,16 @@ info(int para)
     //wrong inputs.
       return -1;
   }
+}
+
+
+void
+applyticket(int num)
+{
+  struct proc *p;
+  p = myproc();
+  acquire(&ptable.lock);
+  p->tickets = num;
+  p->stride = 10000/num;
+  release(&ptable.lock);
 }

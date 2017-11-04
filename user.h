@@ -24,6 +24,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int info(int);
+int applyticket(int);
 
 // ulib.c
 int stat(char*, struct stat*);
@@ -38,3 +39,5 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+uint random(int);
+void srandom(uint);

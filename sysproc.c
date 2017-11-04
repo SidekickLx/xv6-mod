@@ -98,3 +98,12 @@ sys_info(void)
     return -1;
   return info(ins);
 }
+
+int 
+sys_applyticket(void)
+{
+  int num;
+if(argint(0, &num) < 0 )
+  return -1;
+return applyticket(num);
+}

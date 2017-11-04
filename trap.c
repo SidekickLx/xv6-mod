@@ -41,7 +41,7 @@ trap(struct trapframe *tf)
       exit();
     myproc()->tf = tf;
     // counter + 1 means the process called syscall onece.
-    myproc()->syscall_counter++; 
+    //myproc()->syscall_counter++; 
     syscall();
     if(myproc()->killed)
       exit();

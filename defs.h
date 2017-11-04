@@ -134,6 +134,11 @@ void            release(struct spinlock*);
 void            pushcli(void);
 void            popcli(void);
 
+//random.c
+uint            random(int max);
+void            srandom(uint seed);
+
+
 // sleeplock.c
 void            acquiresleep(struct sleeplock*);
 void            releasesleep(struct sleeplock*);
