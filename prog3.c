@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
     applyticket(250);
     int i, k;
-    const int loop = 43000;
+    const int loop = 430000;
     for (i = 0; i < loop; i++)
     {
         asm("nop"); //in order to prevent the compiler from optimizing the for loop for(k=0;k<loop;k++)

@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
     applyticket(50);
     int i, k;
-    const int loop = 43000;
+    const int loop = 430000;
     for (i = 0; i < loop; i++)
     {
         // write your own function here

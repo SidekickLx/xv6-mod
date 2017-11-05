@@ -361,7 +361,7 @@ scheduler(void)
 }
 */
 // this is the function of lottery scheduler
-
+/*
 void
 scheduler(void)
 {
@@ -424,9 +424,9 @@ scheduler(void)
     release(&ptable.lock);
   }
 }
+*/
 
 
-/*
 //stride schduler
 void 
 scheduler(void)
@@ -435,7 +435,7 @@ scheduler(void)
   struct proc *next_p;
   struct cpu *c = mycpu();
   int runnable_process = 0;
-  float min_stride = 10000;
+  int min_stride = 10000;
   c->proc = 0;
   
   for(;;){
@@ -443,15 +443,13 @@ scheduler(void)
     sti();
 
     // Loop over process table looking for process to run.
-    
-    min_stride = 10000;
     runnable_process = 0;
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
       runnable_process++;
-      if(p->stride <= min_stride){
+      if(p->stride < min_stride){
         next_p = p;
         min_stride = p->stride;
       } 
@@ -466,10 +464,11 @@ scheduler(void)
     // before jumping back to us.
     
     c->proc = next_p;
+    next_p->stride = next_p->stride + (10000/next_p->tickets);
+    min_stride = next_p->stride;
+    //cprintf("min_stride = %d\n",min_stride);
     switchuvm(next_p);
     next_p->state = RUNNING;
-    next_p->stride = next_p->stride + (10000/next_p->tickets);
-
     swtch(&(c->scheduler), next_p->context);
     switchkvm();
 
@@ -481,7 +480,7 @@ scheduler(void)
 
 }
 
-*/
+
 
 
 
