@@ -454,7 +454,7 @@ scheduler(void)
         min_stride = p->stride;
       } 
     }
-    if(runnable_process == 0){
+    if(next_p){
       release(&ptable.lock);
       continue;
     }
@@ -462,7 +462,11 @@ scheduler(void)
     // Switch to chosen process.  It is the process's job
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
-    
+    if(next_p->state != RUNNABLE){
+      min_stride = 1000000;
+      release(&ptable.lock);
+      continue;
+    }
     c->proc = next_p;
     next_p->stride = next_p->stride + (10000/next_p->tickets);
     min_stride = next_p->stride;
