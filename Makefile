@@ -175,11 +175,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_testmysyscall\
-	_prog1\
-	_prog2\
-	_prog3\
-#	_random\
+
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
