@@ -66,4 +66,6 @@ xv6-mod is a modification of xv6. The aim of this project is to make the origina
 1. A better file system.
 2. A better shell
 3. More built in commands.
+4. Thread library
+5. something else...
 
