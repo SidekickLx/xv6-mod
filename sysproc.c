@@ -100,10 +100,22 @@ sys_info(void)
 }
 
 int 
-sys_applyticket(void)
+sys_atckt(void)
 {
   int num;
-if(argint(0, &num) < 0 )
-  return -1;
-return applyticket(num);
+  if(argint(0, &num) < 0 )
+    return -1;
+  atckt(num);
+  return 0;
+}
+
+int
+sys_clone(void)
+{
+  int size = 0;
+  char *stack_ptr;
+  if(argint(1, &size)<0 || argptr(0, &stack_ptr, size)<0 )
+    return -1;
+  else 
+    return clone(stack_ptr, size);
 }

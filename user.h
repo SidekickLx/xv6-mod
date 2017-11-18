@@ -24,7 +24,8 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int info(int);
-int applyticket(int);
+int atckt(int);
+int clone(void*, int);
 
 // ulib.c
 int stat(char*, struct stat*);

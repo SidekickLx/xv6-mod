@@ -711,7 +711,7 @@ info(int para)
 
 
 void
-applyticket(int num)
+atckt(int num)
 {
   struct proc *p;
   p = myproc();
@@ -719,4 +719,12 @@ applyticket(int num)
   p->tickets = num;
   p->stride = 10000/num;
   release(&ptable.lock);
+}
+
+//clone 
+//the basic system call for the thread library
+int
+clone(void *stack,  int size){
+
+  return 1;
 }

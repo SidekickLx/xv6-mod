@@ -121,6 +121,8 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 int             info(int);
+void            atckt(int);
+int             clone(void*, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

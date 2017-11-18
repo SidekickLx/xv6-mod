@@ -21,4 +21,5 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_info   22
-#define SYS_applyticket  23
+#define SYS_atckt  23
+#define SYS_clone  24
