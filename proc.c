@@ -724,7 +724,38 @@ atckt(int num)
 //clone 
 //the basic system call for the thread library
 int
-clone(void *stack,  int size){
+clone(void *stack, int size){
+  int i,pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+  // Allocate process.
+  if((np = allocproc()) == 0)
+    return -1;
 
-  return 1;
+  np->state = UNUSED;
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
+  np->pgdir = curproc->pgdir;
+
+  np->tf->eax = 0;   // Clear %eax so that fork returns 0 in the child.
+  np->tstack = stack;
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+
+  np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *); //put esp to right spot on stack
+  // *((uint*)(np->tf->esp)) = (uint)arg; //arg to function
+  // *((uint*)(np->tf->esp)-4) = 0xFFFFFFFF; //return to nowhere
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  pid = np->pid;
+
+  acquire(&ptable.lock);  //lock so writes last
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+
+  return pid;
 }
