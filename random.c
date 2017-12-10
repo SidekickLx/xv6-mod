@@ -26,13 +26,3 @@ void srandom(uint seed)
 {
   next = seed;
 }
-
-//for test 
-// int main(void){
-//   int ticket_sum = 20;
-//   int winner_ticket = 0;
-//   srandom(uptime());
-//   winner_ticket = random(ticket_sum);
-//   printf(1,"winner_ticket = %d\n", winner_ticket);
-//   exit();
-// }
