@@ -140,8 +140,6 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
-  //p->tickets = 10000;
-  //p->stride = 1.0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -324,7 +322,7 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-/*
+
 void
 scheduler(void)
 {
@@ -359,7 +357,7 @@ scheduler(void)
     release(&ptable.lock);
   }
 }
-*/
+
 // this is the function of lottery scheduler
 /*
 void
@@ -426,7 +424,7 @@ scheduler(void)
 }
 */
 
-
+/*
 //stride schduler
 void 
 scheduler(void)
@@ -488,7 +486,7 @@ scheduler(void)
   }
 
 }
-
+*/
 
 
 
@@ -728,34 +726,34 @@ clone(void *stack, int size){
   int i,pid;
   struct proc *np;
   struct proc *curproc = myproc();
+
+//  if((uint)stack % PGSIZE != 0 || (uint)stack + PGSIZE > curproc->sz) return -1;
+
   // Allocate process.
   if((np = allocproc()) == 0)
     return -1;
-
-  np->state = UNUSED;
-  np->sz = curproc->sz;
-  np->parent = curproc;
+// Copy process state from p.
+	np->pgdir = curproc->pgdir;
+	np->sz = curproc->sz;
+	np->parent = curproc;
   *np->tf = *curproc->tf;
-  np->pgdir = curproc->pgdir;
+  
+  np->tf->eax = 0;
 
-  np->tf->eax = 0;   // Clear %eax so that fork returns 0 in the child.
-  np->tstack = stack;
-  for(i = 0; i < NOFILE; i++)
-    if(curproc->ofile[i])
-      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->ustack = stack;
+  np->tf->esp = (uint)stack + size - 2 * 4; 
+	np->tf->eip = *((uint*)(stack + size - 2 * 4)); 
+
+	for(i = 0; i < NOFILE; i++)
+	  if(curproc->ofile[i])
+	    np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
-
-  np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *); //put esp to right spot on stack
-  // *((uint*)(np->tf->esp)) = (uint)arg; //arg to function
-  // *((uint*)(np->tf->esp)-4) = 0xFFFFFFFF; //return to nowhere
-
+  
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-
+  
   pid = np->pid;
-
-  acquire(&ptable.lock);  //lock so writes last
-  np->state = RUNNABLE;
+  acquire(&ptable.lock);
+	np->state = RUNNABLE;
   release(&ptable.lock);
-
-  return pid;
+	return pid;
 }

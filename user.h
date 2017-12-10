@@ -1,5 +1,11 @@
+#ifndef _USER_H_
+#define _USER_H_
 struct stat;
 struct rtcdate;
+
+typedef struct __lock_t{
+	uint locked;
+}lock_t;
 
 // system calls
 int fork(void);
@@ -42,3 +48,11 @@ void free(void*);
 int atoi(const char*);
 uint random(int);
 void srandom(uint);
+
+//int  thread_create(void *(*start_routine)(void*), void *arg);
+int lock_init(lock_t* lock);
+void lock_acquire(lock_t *lock);
+void lock_release(lock_t *lock);
+int thread_create(void (*start_routine)(void*), void *arg);
+
+#endif // _USER_H_
