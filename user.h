@@ -3,9 +3,21 @@
 struct stat;
 struct rtcdate;
 
-typedef struct __lock_t{
+typedef struct __spinlock_t{
 	uint locked;
-}lock_t;
+}spinlock_t;
+
+typedef struct __qlock_t{
+	uint qsize;
+	uint tail;
+	int *flag;
+}qlock_t;
+
+typedef struct{
+	uint seq;
+	spinlock_t spinlock;
+} seqlock_t;
+
 
 // system calls
 int fork(void);
@@ -49,10 +61,18 @@ int atoi(const char*);
 uint random(int);
 void srandom(uint);
 
-//int  thread_create(void *(*start_routine)(void*), void *arg);
-int lock_init(lock_t* lock);
-void lock_acquire(lock_t *lock);
-void lock_release(lock_t *lock);
+//thread.c
+int spinlock_init(spinlock_t* lock);
+void spinlock_acquire(spinlock_t *lock);
+void spinlock_release(spinlock_t *lock);
+int qlock_init(qlock_t *lock, uint size);
+void qlock_acquire(qlock_t *lock, int slot);
+void qlock_release(qlock_t *lock, int slot);
+int seqlock_init(seqlock_t *lock);
+void seqlock_writer_aquire(seqlock_t *lock);
+void seqlock_writer_release(seqlock_t *lock);
+int seqlock_reader_aquire(seqlock_t *lock);
+int seqlock_reader_retry(seqlock_t *lock, int startseq);
 int thread_create(void (*start_routine)(void*), void *arg);
 
 #endif // _USER_H_

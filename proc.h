@@ -52,7 +52,7 @@ struct proc {
   int syscall_counter;         // A counter to count the number of system calls the process has done so far.
   int tickets;                 // Tickets
   int stride;                  //Stride
-  void* ustack;                 //stack of thread
+  uint ustack;                 //stack of thread
 };
 
 // Process memory is laid out contiguously, low addresses first:

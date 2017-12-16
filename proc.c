@@ -733,16 +733,20 @@ clone(void *stack, int size){
   if((np = allocproc()) == 0)
     return -1;
 // Copy process state from p.
+  np->state = UNUSED;
 	np->pgdir = curproc->pgdir;
 	np->sz = curproc->sz;
 	np->parent = curproc;
   *np->tf = *curproc->tf;
   
   np->tf->eax = 0;
-
-  np->ustack = stack;
-  np->tf->esp = (uint)stack + size - 2 * 4; 
+  np->ustack = (uint)stack;
 	np->tf->eip = *((uint*)(stack + size - 2 * 4)); 
+
+  np->tf->esp = (uint)(stack+PGSIZE-4); //put esp to right spot on stack
+  *((uint*)(np->tf->esp)) = *((uint*)(stack + size - 4));  //arg to function
+  //*((uint*)(np->tf->esp)-4) = 0xFFFFFFFF; //fake return PC
+  np->tf->esp -= 4;
 
 	for(i = 0; i < NOFILE; i++)
 	  if(curproc->ofile[i])
@@ -753,7 +757,7 @@ clone(void *stack, int size){
   
   pid = np->pid;
   acquire(&ptable.lock);
-	np->state = RUNNABLE;
+  np->state = RUNNABLE;
   release(&ptable.lock);
 	return pid;
 }
